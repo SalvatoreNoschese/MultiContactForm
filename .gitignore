@@ -1,0 +1,15 @@
+# Local settings: never in the repository.
+/config.php
+/projects.php
+
+# Runtime data (rate-limit counters, used challenges).
+/_app-data*/
+
+# bin/fetch-vendor.sh's archives.
+/bin/dist/
+
+# Fetched on demand by bin/lint.sh: PHPStan (~30 MB), Stylelint and its
+# node_modules (~30 MB), and the daily look at their latest versions.
+/bin/tools/phpstan.phar
+/bin/tools/stylelint/
+/bin/tools/.latest-versions

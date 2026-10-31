@@ -1,0 +1,103 @@
+# MultiContactForm — Apache hardening.
+# This directory (public/) must be the DocumentRoot: app/, _app-data/,
+# config.php and projects.php live one level up, unreachable by URL.
+
+Options -Indexes -MultiViews -ExecCGI
+DirectoryIndex index.php
+
+# Refused and missing requests get our own page instead of the server's:
+# error.php, in the language of the address, tells the two apart by the
+# REDIRECT_STATUS the server gives it. The refused file is never executed:
+# error.php only draws the page. The path is resolved from the document root:
+# /error.php works both with DocumentRoot = public/ and with the project in a
+# fixed web root (the root .htaccess maps it into public/). In a subfolder,
+# write the subfolder in both: ErrorDocument 403 /contact/error.php.
+ErrorDocument 403 /error.php
+ErrorDocument 404 /error.php
+ServerSignature Off
+
+# Reject oversized request bodies early. Must be at least the attachments'
+# max_total_bytes plus ~100 KB (default 10 MB of files → 11 MB here); the
+# application enforces the exact limits itself.
+LimitRequestBody 11534336
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Force HTTPS (also behind proxies that send X-Forwarded-Proto).
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # Only safe HTTP methods.
+    RewriteCond %{REQUEST_METHOD} !^(GET|HEAD|POST)$
+    RewriteRule ^ - [R=405,L]
+
+    # Anything hidden, at any depth: .env, .git/, .htaccess. FilesMatch below
+    # cannot see a dotted directory. .well-known stays reachable (ACME).
+    RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+
+    # Pages per language: /es/ and /es/privacy.php run the same
+    # files as / and /privacy.php; PHP reads the language from REQUEST_URI,
+    # which a rewrite leaves untouched (Prefs::pathLang()). Unknown codes reach
+    # PHP too and are redirected to the visitor's language.
+    RewriteRule ^[a-z]{2,3}/?$ index.php [QSA,L]
+    RewriteRule ^[a-z]{2,3}/privacy\.php$ privacy.php [QSA,L]
+
+    # Only the five entry points execute, at the top level; index.php deeper
+    # down is a directory guard (<?php // Silence...).
+    RewriteRule ^(?!(?:index|submit|challenge|privacy|error)\.php$)(?!(?:.+/)?index\.php$).*\.php$ - [F,L,NC]
+
+    # Any extension not on this allow-list is denied: a stray
+    # file (a backup, a note, a dump) is refused even if nobody thought of its
+    # extension. %{REQUEST_URI} is the original URL, so (^|/) also works in a
+    # subfolder and through the root .htaccess. error.php is among the entry
+    # points: an ErrorDocument is an internal request and would otherwise deny
+    # itself.
+    # .txt and .md only by name: robots.txt, llms.txt and the vendored licence
+    # and readme files.
+    RewriteCond %{REQUEST_URI} \.[^/]+$
+    RewriteCond %{REQUEST_URI} !(^|/)(?:index|submit|challenge|privacy|error)\.php$
+    RewriteCond %{REQUEST_URI} !(^|/)(?:robots|llms)\.txt$
+    RewriteCond %{REQUEST_URI} !(^|/)(?:license|licence|readme)\.(?:txt|md)$ [NC]
+    RewriteCond %{REQUEST_URI} !\.(?:css|js|cjs|png|webp|svg|ico)$ [NC]
+    RewriteRule ^ - [F,L]
+</IfModule>
+
+# By file name at any depth, so it works without mod_rewrite too:
+# every .php but the entry points and the index.php guards, dotfiles, the PHP
+# error logs shared hosts write into the site folder (no extension, so the
+# allow-list above never sees them), backups and editor leftovers.
+<FilesMatch "^(?!(?:index|submit|challenge|privacy|error)\.php$).*\.php$|^\.(?!well-known)|^(?:error_log|php_errorlog)$|\.(?:log|bak|old|orig|save|swp|swo|tmp|rej|sql|ini|sh|lock|key|pem|dist)$|~$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    # PHP responses set their own headers; these cover static assets too.
+    Header always set X-Content-Type-Options "nosniff"
+    # Not on redirects: Prefs.php gives its own the policy that keeps the
+    # visitor's site of origin across them (see Prefs::keepReferrer()).
+    Header always set Referrer-Policy "no-referrer" "expr=%{REQUEST_STATUS} -lt 300 || %{REQUEST_STATUS} -ge 400"
+    Header always set X-Frame-Options "DENY"
+    Header always set Cross-Origin-Resource-Policy "same-origin"
+    Header always set Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+    Header always set Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; worker-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'" "expr=%{CONTENT_TYPE} !~ m#^text/html#"
+    # Both tables: under PHP-FPM, PHP's own header is in the one "unset"
+    # reaches; app/includes/Security.php removes it as well.
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+</IfModule>
+
+# Static files. Every one is linked by asset() with ?v=<modification time>:
+# when a file changes its URL changes too, so a year and "immutable" are safe.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(?:css|js|cjs|svg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+AddType application/javascript .js
+# The ALTCHA widget ships as .cjs: without a JavaScript type, nosniff blocks it.
+AddType text/javascript .cjs
+AddType image/svg+xml .svg
+AddDefaultCharset UTF-8

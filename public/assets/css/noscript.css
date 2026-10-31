@@ -1,0 +1,3 @@
+/* Loaded only without JavaScript (<noscript> in app/views/form.php): the form
+   cannot pass the anti-spam proof-of-work, so only the notice shows. */
+#contact-form { display: none; }

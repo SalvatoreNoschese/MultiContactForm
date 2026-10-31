@@ -1,0 +1,36 @@
+# MultiContactForm — project root.
+#
+# Recommended: make public/ the DocumentRoot, and this file is never read.
+#
+# Hosts without that option (e.g. Altervista, where the web root is fixed):
+# upload the whole project to the web root and this file maps every request
+# into public/ internally. URLs stay the same (/, /privacy.php, /assets/…),
+# while app/, _app-data/, bin/, config.php and projects.php become unreachable
+# by construction: any URL is looked up inside public/.
+
+Options -Indexes -MultiViews
+DirectoryIndex disabled
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Force HTTPS here, on the original URL: inside public/ the request has
+    # already been rewritten and the redirect would expose "/public/…".
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # Second pass, already inside public/: its own .htaccess takes over
+    # (its RewriteEngine On stops these rules from being inherited).
+    RewriteRule ^public/ - [L]
+
+    # Everything else, including "/", is served from public/.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Without mod_rewrite the mapping cannot work: serve nothing rather than
+# expose the private directories.
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

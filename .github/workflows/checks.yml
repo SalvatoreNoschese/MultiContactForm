@@ -1,0 +1,102 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays: is there a new ALTCHA library or widget?
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Actions are pinned to a commit, not a tag: a tag can be moved to other code.
+# The comment names the release; update both together.
+
+jobs:
+  lint:
+    name: bin/lint.sh (PHP ${{ matrix.php }})
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.1", "8.2", "8.3", "8.4", "8.5"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Nothing here pushes; the token need not stay in .git/config.
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, openssl, fileinfo, curl, intl
+          coverage: none
+
+      # PHPStan and Stylelint run in their own jobs below; lint.sh skips them
+      # when absent.
+      - name: Run project checks
+        run: sh bin/lint.sh
+
+  phpstan:
+    name: PHPStan
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: "8.3"
+          extensions: mbstring, openssl, fileinfo, curl, intl
+          # Pinned to a release that passes; bin/lint.sh uses the latest one
+          # locally and offers to raise this line when it passes too.
+          tools: phpstan:2.3.2
+          coverage: none
+
+      # Level and paths come from bin/tools/phpstan.neon, shared with bin/lint.sh.
+      - name: Analyse
+        run: phpstan analyse -c bin/tools/phpstan.neon --no-progress
+
+  stylelint:
+    name: Stylelint
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Rules in bin/tools/stylelint.json, shared with bin/lint.sh. Pinned to a
+      # release that passes; bin/lint.sh uses the latest one locally and
+      # offers to raise the version below when it passes too. The runner's Node.
+      - name: Install
+        run: npm install --prefix bin/tools/stylelint --no-save --no-audit --no-fund stylelint@17.16.0
+
+      - name: Check
+        run: >-
+          bin/tools/stylelint/node_modules/.bin/stylelint
+          --config bin/tools/stylelint.json --quiet-deprecation-warnings
+          "public/assets/css/*.css"
+
+  vendor:
+    # Red (and an email from GitHub) when a newer altcha-lib-php or ALTCHA
+    # widget is out: see README.md, "Third-party code" → "How to update".
+    # Weekly or by hand only: on a push or a pull request it would turn the
+    # run red for something the change did not cause.
+    name: ALTCHA releases
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: bin/fetch-vendor.sh --check
+        run: sh bin/fetch-vendor.sh --check

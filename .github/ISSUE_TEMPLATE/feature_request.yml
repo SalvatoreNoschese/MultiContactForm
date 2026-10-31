@@ -1,0 +1,16 @@
+name: Feature request
+description: Something the form should do and does not.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What you need
+      description: The situation, not the solution. What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How it could work
+      description: Optional. Keep in mind the project adds no dependency, CDN or tracking.

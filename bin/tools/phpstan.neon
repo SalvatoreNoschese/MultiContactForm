@@ -1,0 +1,37 @@
+parameters:
+    level: 5
+
+    # PHP 8.1 (the minimum, see README "Requirements") up to the newest PHP in
+    # CI: PHPStan then flags anything missing somewhere in the range.
+    phpVersion:
+        min: 80100
+        max: 80599
+
+    # Defines the runtime constants from app/includes/bootstrap.php.
+    bootstrapFiles:
+        - phpstan-constants.php
+
+    # Treated as "some string", not the placeholder value.
+    dynamicConstantNames:
+        - MCF_ROOT
+        - MCF_APP_DIR
+        - MCF_VERSION
+
+    # Relative to this file. app/views/ are templates whose variables are set by
+    # the including file, so PHPStan would flag nearly every line.
+    paths:
+        - ../../app/includes
+        - ../../public/index.php
+        - ../../public/submit.php
+        - ../../public/challenge.php
+        - ../../public/privacy.php
+
+    # Not analysed (third-party code), but still scanned below.
+    excludePaths:
+        analyse:
+            - ../../app/vendor
+
+    # Scanned for class definitions, not analysed: there is no Composer
+    # autoloader for PHPStan to find them through.
+    scanDirectories:
+        - ../../app/vendor/altcha-lib-php

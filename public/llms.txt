@@ -1,0 +1,32 @@
+# MultiContactForm
+
+> Self-hosted, multilingual contact form shared by several websites: one form, one backend, one anti-spam system, one mail pipeline. Pick the project and the reason, write the message, and it reaches the site owner by email.
+
+## This site
+
+- [Contact form](./): the project and reason can be preselected with `#project:reason` (e.g. `./#webtools:feedback`); languages by path (`it/`, `en/`, `es/`, `fr/`, `de/`)
+- [Privacy & cookie notice](privacy.php): what is collected, why, for how long, and your rights
+
+Sending needs JavaScript: the anti-spam proof-of-work runs in the browser.
+
+## Key facts
+
+- PHP 8.1+, no database, no Composer, no npm, no CDN, no build step; runs on shared hosting
+- Mail through SMTP or the Brevo HTTP API (for hosts that block mail ports); optional attachments checked on their real bytes
+- Anti-spam: the official ALTCHA library and widget (vendored), honeypot, minimum fill time, per-client and global rate limits
+- Strict CSP, CSRF without sessions, no raw IP stored, only technical cookies
+- English, Italian, Spanish, French and German; languages discovered from `app/lang/`
+- Licensed under MIT; maintained by Salvatore Noschese
+
+## Docs
+
+- [README](https://github.com/SalvatoreNoschese/MultiContactForm/blob/main/README.md): Overview, quick start, installation, projects, languages, security
+- [projects-sample.php](https://github.com/SalvatoreNoschese/MultiContactForm/blob/main/projects-sample.php): How to describe the sites, reasons and links
+- [config-sample.php](https://github.com/SalvatoreNoschese/MultiContactForm/blob/main/config-sample.php): Every setting with its default
+- [SECURITY.md](https://github.com/SalvatoreNoschese/MultiContactForm/blob/main/SECURITY.md): Vulnerability reporting, scope, accepted risks
+
+## Optional
+
+- [Vendored libraries](https://github.com/SalvatoreNoschese/MultiContactForm/blob/main/README.md#third-party-code): ALTCHA library and widget, versions, update procedure
+- [CONTRIBUTING.md](https://github.com/SalvatoreNoschese/MultiContactForm/blob/main/CONTRIBUTING.md): Development setup, checks, releases
+- [CHANGELOG.md](https://github.com/SalvatoreNoschese/MultiContactForm/blob/main/CHANGELOG.md): Release history

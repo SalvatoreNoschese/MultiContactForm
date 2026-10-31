@@ -1,0 +1,22 @@
+# Editor defaults: PHP, JavaScript and CSS are indented with 4 spaces, shell
+# scripts with tabs.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.sh]
+indent_style = tab
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+# Two trailing spaces are Markdown's hard line break: keep them.
+indent_size = 2
+trim_trailing_whitespace = false
