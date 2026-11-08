@@ -52,6 +52,7 @@ final class Security
             // The ALTCHA widget injects its stylesheet in a <style> element.
             "style-src 'self' 'nonce-" . self::cspNonce() . "'",
             "img-src 'self'" . $origins,
+            "font-src 'self'",
             "connect-src 'self'" . $origins,
             // The ALTCHA widget starts its proof-of-work workers from Blob URLs.
             "worker-src 'self' blob:",

@@ -1,5 +1,13 @@
 /* MultiContactForm — lightweight, framework-free stylesheet. */
 
+/* Ubuntu Sans and Ubuntu Sans Mono, variable, Latin subset only, served from
+   here (font-src 'self'). Licence and version: assets/fonts/LICENSE.txt and
+   app/includes/Vendor.php. A missing file falls back to the system fonts. */
+@font-face { font-family: "Ubuntu Sans"; font-style: normal; font-weight: 100 800; font-display: swap; src: url("../fonts/UbuntuSans-wght.woff2") format("woff2"); }
+@font-face { font-family: "Ubuntu Sans"; font-style: italic; font-weight: 100 800; font-display: swap; src: url("../fonts/UbuntuSans-wght-Italic.woff2") format("woff2"); }
+@font-face { font-family: "Ubuntu Sans Mono"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("../fonts/UbuntuSansMono-wght.woff2") format("woff2"); }
+@font-face { font-family: "Ubuntu Sans Mono"; font-style: italic; font-weight: 400 700; font-display: swap; src: url("../fonts/UbuntuSansMono-wght-Italic.woff2") format("woff2"); }
+
 :root {
     --bg: #f6f7f9;
     --surface: #ffffff;
@@ -16,7 +24,7 @@
     --warn-border: #c98a00;
     --ok: #1b7a3d;
     --radius: 8px;
-    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font: "Ubuntu Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color-scheme: light dark;
 }
 
@@ -125,12 +133,18 @@ a:hover { color: var(--accent-hover); }
 .icon-btn { padding: .3rem; font-size: 1.25rem; line-height: 1; text-decoration: none; }
 a.topbar-btn:hover { color: var(--text); }
 
-/* Without a theme cookie: show the toggle pointing to the opposite of the device theme. */
+/* Two toggles, one shown: the one pointing to the opposite of the theme on
+   screen. The device theme without data-theme, else data-theme (the saved
+   choice or this visit's, see theme.js), which wins by specificity. */
 .theme-switch--to-light { display: none; }
 @media (prefers-color-scheme: dark) {
     .theme-switch--to-dark { display: none; }
     .theme-switch--to-light { display: inline-flex; }
 }
+:root[data-theme="light"] .theme-switch--to-light,
+:root[data-theme="dark"] .theme-switch--to-dark { display: none; }
+:root[data-theme="light"] .theme-switch--to-dark,
+:root[data-theme="dark"] .theme-switch--to-light { display: inline-flex; }
 .flag {
     width: 21px;
     height: 14px;
@@ -378,6 +392,17 @@ altcha-widget {
 .btn:disabled { opacity: .65; cursor: progress; }
 .btn-secondary { background: transparent; color: var(--accent); }
 .btn-secondary:hover { background: transparent; color: var(--accent-hover); }
+/* "Reset" with nothing to reset: grey and inert, no hover or tap colour
+   (on a touch screen a tap leaves :hover on), so it does not look clickable. */
+.btn-secondary:disabled,
+.btn-secondary:disabled:hover {
+    color: var(--muted);
+    background: transparent;
+    border-color: var(--border);
+    opacity: 1;
+    cursor: not-allowed;
+    -webkit-tap-highlight-color: transparent;
+}
 
 .success:focus { outline: none; }
 .success h1 { color: var(--ok); }
@@ -455,7 +480,7 @@ altcha-widget {
     border: 1px solid var(--border);
     border-radius: 6px;
     overflow-wrap: anywhere;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: "Ubuntu Sans Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: .8rem;
 }
 .error-card .btn { display: flex; margin-top: 1.4rem; }

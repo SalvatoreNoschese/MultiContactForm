@@ -40,7 +40,12 @@ $code = (int) http_response_code();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light dark">
+    <?php if ($addressError): /* Before anything is drawn: this visit's theme (?view=), see the file. */ ?>
+    <script src="<?= e(asset('assets/js/theme.js')) ?>"></script>
+    <?php endif; ?>
     <title><?= $title ?></title>
+    <?php /* Upright only: italic and mono do not appear on every page. crossorigin is required for fonts. */ ?>
+    <link rel="preload" href="<?= e(url('assets/fonts/UbuntuSans-wght.woff2')) ?>" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="<?= e(asset('assets/css/style.css')) ?>">
 </head>
 <body class="error-body">

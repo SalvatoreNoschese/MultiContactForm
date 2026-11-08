@@ -60,6 +60,7 @@ return [
     'success_title'                 => 'Nachricht gesendet',
     'success_text'                  => 'Vielen Dank! Ich antworte so bald wie möglich an die angegebene E-Mail-Adresse.',
     'back_to'                       => 'Zurück zu {project}',
+    'back'                          => 'Zurück',
     'auto_return'                   => 'Automatische Rückkehr in {seconds} s.',
     'stay'                          => 'Hier bleiben',
     'send_another'                  => 'Weitere Nachricht senden',
@@ -207,6 +208,8 @@ return [
     'privacy.cookie_lang_purpose'   => 'Speichert die im Menü gewählte Sprache. Ohne dieses Cookie verwendet die Website die Sprache Ihres Browsers.',
     'privacy.cookie_theme_duration' => '1 Jahr',
     'privacy.cookie_theme_purpose'  => 'Speichert das mit der Schaltfläche 🌓 gewählte helle/dunkle Design. Ohne dieses Cookie folgt die Website dem Design Ihres Geräts.',
+    'privacy.storage_visit_duration' => 'Bis der Tab geschlossen wird',
+    'privacy.storage_visit_purpose' => 'Im Speicher des Tabs (sessionStorage), kein Cookie, und wird nie an den Server gesendet. Behält das helle/dunkle Design bei, das ein Link von einer anderen Website mitbringt (?view=), damit der ganze Besuch gleich aussieht. Keine gespeicherte Wahl: Die 🌓-Schaltfläche ersetzt es. Technisch notwendig wie die Cookies oben: keine Einwilligung erforderlich.',
     'privacy.cookies_note'          => 'Es handelt sich ausschließlich um technische Cookies: Für sie verlangt das Gesetz nur die Information, die Sie gerade lesen, keine Einwilligung – deshalb gibt es kein Cookie-Banner. Die Sprach- und Design-Cookies werden nur gesetzt, wenn Sie eine Auswahl treffen (Sprachmenü und Schaltfläche 🌓), und Sie können sie oben jederzeit löschen: Ohne sie verwendet die Website die Sprache Ihres Browsers und das Design Ihres Geräts. Keine Profiling-, Analyse- oder Drittanbieter-Cookies.',
     // Only with Matomo configured (config.php); {matomo} is its host.
     'privacy.cookies_stats'         => 'Die Besuchsstatistiken (Matomo, siehe oben) verwenden keine Cookies: Deshalb stehen sie nicht in dieser Tabelle und erfordern keine Einwilligung.',

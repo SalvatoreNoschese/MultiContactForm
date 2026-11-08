@@ -757,10 +757,10 @@
         return { depth: st.mcfDepth, host };
     }
 
-    /** "Back to WebTools" from a project's own site, "Back to example.com" from any other. */
+    /** "Back to WebTools" from a project's own site, a plain "Go back" from any other (a host name is often long). */
     function backLabel(back) {
         const p = CFG.projects.find((x) => x.hosts.includes(back.host));
-        return '← ' + t('back_to', { project: p ? L(p.label) : back.host });
+        return '← ' + (p ? t('back_to', { project: L(p.label) }) : t('back'));
     }
 
     function goBack() {
@@ -781,6 +781,26 @@
         location.replace(location.pathname + location.search);
     }
 
+    /**
+     * Something to start over from: a field filled in, a box ticked, a file
+     * chosen, a project or reason selected (and so a #project in the address).
+     * The hidden fields, the honeypot and the anti-spam widget do not count.
+     */
+    function somethingToReset() {
+        return Array.from(form.elements).some((el) => {
+            if (!el.name || el.disabled || el.id === 'website' || el.closest('altcha-widget')) return false;
+            if (el.type === 'hidden') return false;
+            if (el.type === 'file') return chosen.length > 0;
+            if (el.type === 'checkbox' || el.type === 'radio') return el.checked;
+            return String(el.value).trim() !== '';
+        });
+    }
+
+    /** "Reset" is only active when there is something to reset: otherwise it would reload the page for nothing. */
+    function syncReset() {
+        if (!canGoBack) cancelBtn.disabled = !somethingToReset();
+    }
+
     const canGoBack = !!wayBack();
     if (canGoBack) {
         delete cancelBtn.dataset.i18n;
@@ -788,6 +808,9 @@
     }
     cancelBtn.hidden = false;
     cancelBtn.addEventListener('click', () => (canGoBack ? goBack() : resetForm()));
+    // After the form's own handlers (a file removed from the list, a reason
+    // that adds or drops fields): the state is read once they have run.
+    ['input', 'change', 'click'].forEach((type) => form.addEventListener(type, () => setTimeout(syncReset, 0)));
     returnBtn.addEventListener('click', goBack);
 
     // Automatic return: a live countdown, paused while the tab is hidden, and
@@ -853,6 +876,7 @@
         updateCounter();
         successView.hidden = true;
         formView.hidden = false;
+        syncReset();
         messageEl.focus();
     }
 
@@ -908,6 +932,7 @@
             projectSel.value = h.project;
             renderReasons(h.reason);
             renderConditional();
+            syncReset();
         }
     });
 
@@ -924,5 +949,6 @@
     renderReasons(initial.reason);
     renderConditional();
     updateCounter();
+    syncReset(); // after the project and reason from the #fragment
     startAltcha();
 })();

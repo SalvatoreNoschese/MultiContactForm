@@ -24,7 +24,7 @@ define('MCF_APP_DIR', dirname(__DIR__));
 // MultiContactForm version, for whoever looks at the files: never shown on a
 // page. CHANGELOG.md's latest heading must match (bin/lint.sh), and the
 // release tag is vx.y.z of it.
-define('MCF_VERSION', '1.0.0');
+define('MCF_VERSION', '1.0.1');
 define('MCF_REPO', 'https://github.com/SalvatoreNoschese/MultiContactForm');
 
 // Before anything is sent: redirects (Prefs) and the 503 below never reach
@@ -175,7 +175,7 @@ if (PHP_SAPI !== 'cli') {
         header('Cache-Control: no-store');
         header('Retry-After: 3600');
         header('X-Content-Type-Options: nosniff');
-        header("Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'");
+        header("Content-Security-Policy: default-src 'none'; style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'");
         if (in_array(basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')), ['submit.php', 'challenge.php'], true)) {
             header('Content-Type: application/json; charset=UTF-8');
             echo '{"ok":false,"error":"generic"}';

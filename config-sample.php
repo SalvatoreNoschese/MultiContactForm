@@ -21,6 +21,10 @@ return [
     'site_name' => 'Your Name',
 
     // Optional: where that name links to, e.g. your home page; '' = the form.
+    // {lang} becomes the page's language. If your site understands a theme
+    // parameter, a {theme} value passes the theme shown here when the link is
+    // followed (and is left out of the link in the page):
+    // https://example.com/{lang}/?view={theme}
     'site_url' => '',
 
     // Optional: after sending, "Back to …" returns by itself to the page the
@@ -211,7 +215,7 @@ return [
     // Shown on the privacy page, in the data controller box at the top.
     'privacy' => [
         'controller'       => 'Your Name',        // REQUIRED: data controller
-        'address'          => [],                 // optional lines, e.g. ['42046 Reggiolo (RE)']
+        'address'          => [],                 // optional lines, e.g. ['12345 Example City']
         'contact_email'    => 'privacy@example.com', // optional: shown once, obfuscated; '' = the form instead
         // Optional: the key in projects.php for questions about this form
         // itself (e.g. 'contact', see projects-sample.php). The privacy

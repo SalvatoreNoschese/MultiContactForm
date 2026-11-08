@@ -65,9 +65,10 @@ The visitor's browser needs JavaScript, Web Workers and the WebCrypto API
   German included; add one by dropping in `app/lang/<code>.php`.
 - **Light/dark theme** following the device, with a toggle; **language menu**
   with flags. Both remembered in technical cookies written by the server.
+  A linking site can pass its theme for the visit (`?view=`, not saved).
 - **Optional attachments** with extension whitelist, real-content type check
   and size limits.
-- **Privacy page** with a live cookie table (state, value, delete).
+- **Privacy page** with a live table of cookies and of this visit's theme in sessionStorage (state, value, delete).
 - Accessible: real labels, error summary with links to the fields, errors
   announced and tied to their controls, keyboard-friendly menu, visible focus.
 
@@ -101,7 +102,7 @@ Submit ──► Origin + CSRF ──► per-client attempt limit ──► hone
 
 | Layer | Implementation |
 |-------|----------------|
-| CSP | `default-src 'none'; script-src 'self'; style-src 'self' 'nonce-…'; worker-src 'self' blob:; …` — no inline script or style in our markup, no `unsafe-inline` or `unsafe-eval`; the per-response nonce and `blob:` workers are the ALTCHA widget's only exceptions. Plus COOP, CORP, `X-Frame-Options`, `nosniff`, `Referrer-Policy: no-referrer` (except on the service's own redirects, which keep the origin the visitor arrived from, for the way back), `Permissions-Policy`. |
+| CSP | `default-src 'none'; script-src 'self'; style-src 'self' 'nonce-…'; font-src 'self'; worker-src 'self' blob:; …` — no inline script or style in our markup, no `unsafe-inline` or `unsafe-eval`; the per-response nonce and `blob:` workers are the ALTCHA widget's only exceptions. Plus COOP, CORP, `X-Frame-Options`, `nosniff`, `Referrer-Policy: no-referrer` (except on the service's own redirects, which keep the origin the visitor arrived from, for the way back), `Permissions-Policy`. |
 | CSRF | Double-submit cookie (`__Host-mcf_csrf`, `HttpOnly`, `Secure`, `SameSite=Strict`, 4 h idle expiry), compared with `hash_equals`. **No PHP sessions.** The form's issue time travels as an HMAC token bound to the CSRF token (minimum fill time, maximum age). Plus an `Origin` / `Sec-Fetch-Site` check. |
 | Anti-spam | Self-hosted **[ALTCHA](https://altcha.org)** proof-of-work with the official library and widget, vendored (v2 protocol, PBKDF2/SHA-256, 5000 iterations per attempt; HMAC-signed parameters and expiry; each solution accepted once), solved while the visitor types, verified with one HMAC. Three levels (`altcha.level`: low, medium, high; high by default). It makes bulk sending costly, it is not a wall. Honeypot (bots get a fake success). Minimum fill time. Without JavaScript the form is not shown. |
 | Rate limiting | Sliding window, per client and global, configurable. Per client, attempts (every request, a generous limit against hammering) and messages (valid form, solved challenge) are counted apart, so correcting a field a few times never locks a visitor out. The global limit counts only submissions that passed every other check, proof-of-work included, so junk requests cannot use it up and lock the form for everybody. Keys are keyed hashes of the IP (IPv6 → /64); raw IPs are never stored; entries expire within 24 h, cleaned deterministically. |
@@ -283,7 +284,7 @@ With `publish` on any reason, the privacy page gains a section on
 publication (consent, Art. 6(1)(a) GDPR, withdrawable).
 
 A visitor who arrives from another site gets a way back to the very page
-they came from, in the same tab: "Back to WebTools" ("Back to example.com"
+they came from, in the same tab: "Back to WebTools" (a plain "Go back"
 when they came from a site that is not a project's) under the form and
 after sending; after sending also by itself, with a live countdown, when
 `auto_return` in `config.php` gives the seconds ("Stay here" stops it).
@@ -291,7 +292,8 @@ The browser keeps the steps in each history entry's state. From a
 bookmark, a typed address, a new tab or a site that sends no referrer there
 is nothing to go back to: the button under the form becomes "Reset" (the
 page again, as the link in the top bar: what was typed goes, project and
-reason too) and after sending there is none.
+reason too), inactive until there is something to reset, and after sending
+there is none.
 
 Mistakes (unknown reasons or keys, a non-https `site`) stop the
 service at start-up with the reason in the server log. `projects-sample.php`
@@ -318,13 +320,31 @@ $contact = 'https://contact.example.com/' . $lang . '/'
   only by the form's own menu, so `?lang=` from another site (your
   subdomains included), a bookmark or a typed address just leads to
   `/<lang>/` and is not remembered.
-- `?view=`: the theme to show, like the language: shown, never stored. It
-  stays in the address and the form's internal links carry it (privacy page,
-  language menu), so the whole visit keeps your site's look without a
-  cookie. The visitor's own choice with the 🌓 toggle replaces it and is the
-  only thing remembered. `?theme=` from another site is accepted too and
-  becomes `?view=`.
+- `?view=light|dark`: **the theme for this visit, not saved.** The first
+  page is drawn with it; then `public/assets/js/theme.js` (in the `<head>`,
+  before anything is drawn) keeps it in `sessionStorage` for this tab and
+  takes it out of the address with `history.replaceState`, without
+  reloading and keeping the other parameters and the `#fragment`
+  (`/en/?view=dark#webtools` becomes `/en/#webtools`). So the whole visit
+  (privacy page, language menu, reloads) keeps your site's look, the
+  addresses stay clean, and a shared address does not carry the theme.
+  Closing the tab ends it. The privacy page lists it with the cookies
+  (`mcf.view`, state and delete link). It is never a saved choice: only the 🌓 toggle
+  saves one (the theme cookie), and using it ends this visit's theme too.
+  Any other value is ignored. `?theme=` from another site is accepted too
+  and becomes `?view=`.
+
+  Theme shown: this visit's › the saved choice › the device's, which is
+  followed live when neither of the others is set.
 - `#project:reason`: see `projects-sample.php`; unknown values are ignored.
+
+The other way round, the name in the top bar leads to `site_url`
+(`config.php`), a template like the address above: `{lang}` is the page's
+language, and a parameter whose value is `{theme}`
+(`https://example.com/{lang}/?view={theme}`) is left out of the link in the
+page and added only when the link is followed, with the theme on screen
+(this visit's, the saved one or the device's). Use it only if your site
+understands that parameter.
 
 Shared in a chat or on a social network, a link to the form shows a
 preview: the page title, its description and `public/assets/img/og.png`
@@ -413,7 +433,7 @@ MultiContactForm/
 │   ├── robots.txt  llms.txt  for crawlers and LLM readers (project summary, doc links)
 │   ├── favicon.ico
 │   ├── .htaccess
-│   └── assets/          css/, img/ (icons, og.png link preview, flags), js/ (contact, ui), vendor/altcha/
+│   └── assets/          css/, fonts/ (Ubuntu Sans), img/ (icons, og.png link preview, flags), js/ (contact, theme, ui), vendor/altcha/
 ├── app/                 all the code no URL reaches
 │   ├── includes/        PHP classes, bootstrap.php, Vendor.php
 │   ├── lang/            en.php (fallback), it.php, es.php, fr.php, de.php
@@ -491,7 +511,9 @@ to report a vulnerability.
 
 The only third-party code is ALTCHA, vendored unmodified: the PHP library in
 `app/vendor/altcha-lib-php/` and the widget in
-`public/assets/vendor/altcha/` (upstream's own `altcha.umd.min.cjs`).
+`public/assets/vendor/altcha/` (upstream's own `altcha.umd.min.cjs`). The
+interface fonts, Ubuntu Sans and Ubuntu Sans Mono, are in
+`public/assets/fonts/` ([Fonts](#fonts)).
 Everything is committed in the tree and served by the instance itself: no
 CDN, no npm, no Composer, no request to the outside at run time.
 
@@ -499,6 +521,8 @@ CDN, no npm, no Composer, no request to the outside at run time.
 |---|---|---|---|
 | ALTCHA (widget) | 3.5.0 | `public/assets/vendor/altcha/` | MIT |
 | altcha-lib-php | 2.3.0 | `app/vendor/altcha-lib-php/` | MIT |
+| Ubuntu Sans | 1.006 | `public/assets/fonts/` | OFL-1.1 |
+| Ubuntu Sans Mono | 1.006 | `public/assets/fonts/` | OFL-1.1 |
 
 There is no lockfile to say which version is which: that role belongs to
 [`app/includes/Vendor.php`](app/includes/Vendor.php), the single source. The
@@ -607,6 +631,21 @@ follow the site theme through the widget's `--altcha-*` custom properties in
 **Test after updating:** load the form in light and dark theme, wait for
 "Verified", switch language, send a message. Unstyled widget → the nonce;
 stuck on "Verifying…" → `challenge.php` (Network tab).
+
+#### Fonts
+
+**Folder:** `public/assets/fonts/`: Ubuntu Sans and Ubuntu Sans Mono, upright
+and italic, as variable fonts on the `wght` axis. They are the "latin" subset
+Google Fonts serves, unmodified; `LICENSE.txt` there points to the OFL text and
+the upstream repositories. `bin/fetch-vendor.sh` does not download them.
+
+The `@font-face` rules are at the top of `style.css`, and `--font` falls back
+to the system fonts for a missing file or a character outside the subset.
+Every page preloads Ubuntu Sans upright (`form.php`, `privacy.php`,
+`error.php`), with `url()` and not `asset()`: the preload must ask for the
+very URL `style.css` does, without `?v=`, or the font is downloaded twice.
+For the same reason the fonts are cached for a year without a version in the
+URL, so a new release of the fonts must come with new file names.
 
 #### Downloading: `bin/fetch-vendor.sh`
 

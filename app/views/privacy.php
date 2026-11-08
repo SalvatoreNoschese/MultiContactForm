@@ -73,6 +73,8 @@ $cookies = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light dark">
+    <?php /* Before anything is drawn, without defer: this visit's theme (?view=), see the file. */ ?>
+    <script src="<?= e(asset('assets/js/theme.js')) ?>"></script>
     <?= Prefs::themeColorMeta() ?>
 
     <meta name="description" content="<?= e(strip_tags(I18n::t($lang, 'privacy_description'))) ?>">
@@ -80,6 +82,8 @@ $cookies = [
     <?= Prefs::alternateLinks($lang, 'privacy.php') ?>
 
     <?= head_tags($lang, 'privacy.php', I18n::t($lang, 'privacy_title'), strip_tags(I18n::t($lang, 'privacy_description'))) ?>
+    <?php /* Upright only: italic and mono do not appear on every page. crossorigin is required for fonts. */ ?>
+    <link rel="preload" href="<?= e(url('assets/fonts/UbuntuSans-wght.woff2')) ?>" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="<?= e(asset('assets/css/style.css')) ?>">
     <script src="<?= e(asset('assets/js/ui.js')) ?>" defer></script>
 </head>
@@ -143,7 +147,7 @@ $cookies = [
                         $status = '<span class="' . ($isSet ? 'state-present' : 'state-absent') . '">' . ($isSet ? $P('present') : $P('absent')) . '</span>';
                         if ($value !== null) {
                             // Deleted by the server (?forget_cookie=): the language cookie is httponly.
-                            $status .= ' <code>' . e($value) . '</code> · <a href="?forget_cookie=' . $c['key'] . e(Prefs::viewQuery('&')) . '">' . $P('delete') . '</a>';
+                            $status .= ' <code>' . e($value) . '</code> · <a href="?forget_cookie=' . $c['key'] . '">' . $P('delete') . '</a>';
                         }
                         ?>
                         <td><?php if ($c['key'] === 'theme'): ?><span data-cookie-status="theme" aria-live="polite" data-present="<?= e(strip_tags($P('present'))) ?>" data-delete="<?= e(strip_tags($P('delete'))) ?>"><?= $status ?></span><?php else: ?><?= $status ?><?php endif; ?></td>
@@ -151,6 +155,17 @@ $cookies = [
                     <tr class="cookie-desc"><td colspan="3"><?= $c['purpose'] ?></td></tr>
                 </tbody>
             <?php endforeach; ?>
+            <?php /* This visit's theme (?view=): in the tab's memory, not a cookie.
+                     Only the browser knows whether it is there: ui.js shows its
+                     state and deletes it. Same key as public/assets/js/theme.js. */ ?>
+            <tbody>
+                <tr>
+                    <th scope="row"><code>mcf.view</code></th>
+                    <td><?= $P('storage_visit_duration') ?></td>
+                    <td><span data-storage-status="visit" aria-live="polite" data-present="<?= e(strip_tags($P('present'))) ?>" data-absent="<?= e(strip_tags($P('absent'))) ?>" data-delete="<?= e(strip_tags($P('delete'))) ?>"><span class="state-absent"><?= $P('absent') ?></span></span></td>
+                </tr>
+                <tr class="cookie-desc"><td colspan="3"><?= $P('storage_visit_purpose') ?></td></tr>
+            </tbody>
         </table>
     </div>
     <p><?= $P('cookies_note') ?></p>

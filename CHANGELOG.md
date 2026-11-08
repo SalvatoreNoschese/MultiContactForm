@@ -5,6 +5,46 @@ All notable changes to MultiContactForm are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-11-08
+
+### Added
+
+- The interface is set in Ubuntu Sans and Ubuntu Sans Mono (1.006,
+  OFL-1.1), self-hosted in `public/assets/fonts/`, with Ubuntu Sans
+  preloaded on every page. Characters outside the fonts' Latin subset fall
+  back to the system font.
+
+### Changed
+
+- CSP: `font-src 'self'`. `public/.htaccess` serves `.woff2`.
+- `?view=light|dark` is the theme for this visit, not saved: the new
+  `public/assets/js/theme.js`, loaded in the `<head>` before anything is
+  drawn, keeps it in `sessionStorage` (this tab) and takes it out of the
+  address, other parameters and the `#fragment` kept. Internal links no
+  longer carry it, so addresses stay clean and a shared one does not carry
+  the theme. Theme shown: this visit's, then the saved choice, then the
+  device's. The 🌓 toggle saves the choice and ends this visit's theme.
+- The top bar always has both toggles and CSS shows the right one, also
+  for this visit's theme, which the server cannot know.
+- The privacy page lists this visit's theme (`mcf.view`, sessionStorage)
+  under the cookies, with its state and a delete link, filled in by ui.js:
+  only the browser knows it.
+- `site_url` accepts `{lang}` and `{theme}`: a `{theme}` parameter is added
+  only when the link is followed, with the theme on screen.
+
+### Fixed
+
+- The German and English flags filled their 3:2 box only in part (drawn
+  5:3 and 2:1): a gap showed inside the frame. Both are now 3:2, cropped
+  at the sides, not stretched.
+- "Back to …" from a site that is not a project's says "Go back" instead
+  of the site's host name, often too long for the button.
+- "Reset" (shown when there is no page to go back to) is inactive, and grey, until
+  there is something to reset: before, it reloaded the page for nothing.
+- `theme-color` follows a device theme change while the page is open.
+- A page restored from the back/forward cache re-aligns its theme without
+  reloading.
+
 ## [1.0.0] - 2026-10-31
 
 First public release.
@@ -51,4 +91,5 @@ First public release.
   pinned in CI, with an offer to raise the pin), and that GitHub's *Source
   code* archive of a tag holds the site only.
 
+[1.0.1]: https://github.com/SalvatoreNoschese/MultiContactForm/releases/tag/v1.0.1
 [1.0.0]: https://github.com/SalvatoreNoschese/MultiContactForm/releases/tag/v1.0.0

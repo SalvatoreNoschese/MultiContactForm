@@ -4,6 +4,7 @@
 *.png binary
 *.ico binary
 *.zip binary
+*.woff2 binary
 *.svg text
 
 # Vendored builds: collapsed in diffs and kept out of the language statistics.

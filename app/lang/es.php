@@ -60,6 +60,7 @@ return [
     'success_title'                 => 'Mensaje enviado',
     'success_text'                  => '¡Gracias! Te responderé lo antes posible a la dirección de correo que has indicado.',
     'back_to'                       => 'Volver a {project}',
+    'back'                          => 'Volver atrás',
     'auto_return'                   => 'Volviendo automáticamente en {seconds} s.',
     'stay'                          => 'Quedarme aquí',
     'send_another'                  => 'Enviar otro mensaje',
@@ -207,6 +208,8 @@ return [
     'privacy.cookie_lang_purpose'   => 'Recuerda el idioma elegido en el menú. Sin esta cookie el sitio usa el idioma del navegador.',
     'privacy.cookie_theme_duration' => '1 año',
     'privacy.cookie_theme_purpose'  => 'Recuerda el tema claro/oscuro elegido con el botón 🌓. Sin esta cookie el sitio sigue el tema del dispositivo.',
+    'privacy.storage_visit_duration' => 'Hasta que cierres la pestaña',
+    'privacy.storage_visit_purpose' => 'En la memoria de la pestaña (sessionStorage), no es una cookie y nunca se envía al servidor. Mantiene el tema claro/oscuro que trae un enlace desde otro sitio (?view=), para que toda la visita tenga el mismo aspecto. No es una elección guardada: el botón 🌓 la sustituye. Técnico, como las cookies de arriba: no requiere consentimiento.',
     'privacy.cookies_note'          => 'Todas son cookies técnicas: para ellas la ley solo exige el aviso que estás leyendo, no el consentimiento, por eso no hay ningún banner. Las cookies de idioma y tema solo se crean cuando los eliges (menú de idioma y botón 🌓) y puedes eliminarlas arriba en cualquier momento: sin ellas el sitio usa el idioma del navegador y el tema del dispositivo. Ninguna cookie de perfilado, analítica o de terceros.',
     // Only with Matomo configured (config.php); {matomo} is its host.
     'privacy.cookies_stats'         => 'Las estadísticas de visitas (Matomo, véase arriba) no usan cookies: por eso no aparecen en la tabla y no requieren consentimiento.',

@@ -60,7 +60,7 @@ LimitRequestBody 11534336
     RewriteCond %{REQUEST_URI} !(^|/)(?:index|submit|challenge|privacy|error)\.php$
     RewriteCond %{REQUEST_URI} !(^|/)(?:robots|llms)\.txt$
     RewriteCond %{REQUEST_URI} !(^|/)(?:license|licence|readme)\.(?:txt|md)$ [NC]
-    RewriteCond %{REQUEST_URI} !\.(?:css|js|cjs|png|webp|svg|ico)$ [NC]
+    RewriteCond %{REQUEST_URI} !\.(?:css|js|cjs|png|webp|svg|ico|woff2)$ [NC]
     RewriteRule ^ - [F,L]
 </IfModule>
 
@@ -90,8 +90,10 @@ LimitRequestBody 11534336
 
 # Static files. Every one is linked by asset() with ?v=<modification time>:
 # when a file changes its URL changes too, so a year and "immutable" are safe.
+# The fonts are the exception: style.css asks for them without ?v=, so a new
+# release of the fonts must come with new file names.
 <IfModule mod_headers.c>
-    <FilesMatch "\.(?:css|js|cjs|svg)$">
+    <FilesMatch "\.(?:css|js|cjs|svg|woff2)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 </IfModule>
@@ -100,4 +102,5 @@ AddType application/javascript .js
 # The ALTCHA widget ships as .cjs: without a JavaScript type, nosniff blocks it.
 AddType text/javascript .cjs
 AddType image/svg+xml .svg
+AddType font/woff2 .woff2
 AddDefaultCharset UTF-8

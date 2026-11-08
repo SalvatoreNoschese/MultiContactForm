@@ -64,6 +64,7 @@ return [
     'success_title'                 => 'Messaggio inviato',
     'success_text'                  => 'Grazie! Ti risponderò appena possibile all’indirizzo email che hai indicato.',
     'back_to'                       => 'Torna a {project}',
+    'back'                          => 'Torna indietro',
     'auto_return'                   => 'Ritorno automatico tra {seconds} s.',
     'stay'                          => 'Resta qui',
     'send_another'                  => 'Invia un altro messaggio',
@@ -211,6 +212,8 @@ return [
     'privacy.cookie_lang_purpose'   => 'Ricorda la lingua scelta dal menu. Senza questo cookie il sito usa la lingua del browser.',
     'privacy.cookie_theme_duration' => '1 anno',
     'privacy.cookie_theme_purpose'  => 'Ricorda il tema chiaro/scuro scelto con il pulsante 🌓. Senza questo cookie il sito segue il tema del dispositivo.',
+    'privacy.storage_visit_duration' => 'Fino alla chiusura della scheda',
+    'privacy.storage_visit_purpose' => 'Nella memoria della scheda (sessionStorage), non è un cookie e non viene mai inviato al server. Mantiene il tema chiaro/scuro arrivato con un link da un altro sito (?view=), così tutta la visita ha lo stesso aspetto. Non è una scelta salvata: il pulsante 🌓 lo sostituisce. Tecnico, come i cookie qui sopra: non richiede consenso.',
     'privacy.cookies_note'          => 'Sono tutti cookie tecnici: per questi la legge richiede solo l’informativa che stai leggendo, non il consenso (art. 122 Codice Privacy), per questo non è presente alcun banner. I cookie di lingua e tema vengono impostati solo quando li scegli (menu lingua e pulsante 🌓) e puoi eliminarli qui sopra in qualsiasi momento: senza di essi il sito usa la lingua del browser e il tema del dispositivo. Nessun cookie di profilazione, analytics o di terze parti.',
     // Only with Matomo configured (config.php); {matomo} is its host.
     'privacy.cookies_stats'         => 'Le statistiche di visita (Matomo, vedi sopra) non usano cookie: per questo non compaiono nella tabella e non richiedono consenso.',

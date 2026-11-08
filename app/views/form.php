@@ -26,6 +26,8 @@ defined('MCF_APP') || exit;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light dark">
+    <?php /* Before anything is drawn, without defer: this visit's theme (?view=), see the file. */ ?>
+    <script src="<?= e(asset('assets/js/theme.js')) ?>"></script>
     <?php $siteVars = ['site' => (string) Config::get('site_name')]; ?>
     <?= Prefs::themeColorMeta() ?>
 
@@ -34,6 +36,8 @@ defined('MCF_APP') || exit;
     <?= Prefs::alternateLinks($lang, '') ?>
 
     <?= head_tags($lang, '', I18n::t($lang, 'page_title', $siteVars), strip_tags(I18n::t($lang, 'intro'))) ?>
+    <?php /* Upright only: italic and mono do not appear on every page. crossorigin is required for fonts. */ ?>
+    <link rel="preload" href="<?= e(url('assets/fonts/UbuntuSans-wght.woff2')) ?>" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="<?= e(asset('assets/css/style.css')) ?>">
     <noscript><link rel="stylesheet" href="<?= e(asset('assets/css/noscript.css')) ?>"></noscript>
     <script type="application/json" id="contact-config"><?= $configJson ?></script>

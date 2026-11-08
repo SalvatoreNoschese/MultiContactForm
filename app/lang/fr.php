@@ -60,6 +60,7 @@ return [
     'success_title'                 => 'Message envoyé',
     'success_text'                  => 'Merci ! Je vous répondrai dès que possible à l’adresse e-mail indiquée.',
     'back_to'                       => 'Retour à {project}',
+    'back'                          => 'Revenir en arrière',
     'auto_return'                   => 'Retour automatique dans {seconds} s.',
     'stay'                          => 'Rester ici',
     'send_another'                  => 'Envoyer un autre message',
@@ -207,6 +208,8 @@ return [
     'privacy.cookie_lang_purpose'   => 'Mémorise la langue choisie dans le menu. Sans ce cookie, le site utilise la langue du navigateur.',
     'privacy.cookie_theme_duration' => '1 an',
     'privacy.cookie_theme_purpose'  => 'Mémorise le thème clair/sombre choisi avec le bouton 🌓. Sans ce cookie, le site suit le thème de l’appareil.',
+    'privacy.storage_visit_duration' => 'Jusqu’à la fermeture de l’onglet',
+    'privacy.storage_visit_purpose' => 'Dans la mémoire de l’onglet (sessionStorage), ce n’est pas un cookie et il n’est jamais envoyé au serveur. Conserve le thème clair/sombre apporté par un lien depuis un autre site (?view=), pour que toute la visite ait le même aspect. Ce n’est pas un choix enregistré : le bouton 🌓 le remplace. Technique, comme les cookies ci-dessus : aucun consentement requis.',
     'privacy.cookies_note'          => 'Ce sont tous des cookies techniques : pour ceux-ci, la loi exige uniquement l’information que vous lisez, et non un consentement ; c’est pourquoi aucun bandeau n’est affiché. Les cookies de langue et de thème ne sont déposés que lorsque vous les choisissez (menu des langues et bouton 🌓) et vous pouvez les supprimer ci-dessus à tout moment : sans eux, le site utilise la langue du navigateur et le thème de l’appareil. Aucun cookie de profilage, de mesure d’audience ou tiers.',
     // Only with Matomo configured (config.php); {matomo} is its host.
     'privacy.cookies_stats'         => 'Les statistiques de visite (Matomo, voir ci-dessus) n’utilisent aucun cookie : c’est pourquoi elles ne figurent pas dans ce tableau et ne nécessitent pas de consentement.',

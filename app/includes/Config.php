@@ -25,7 +25,7 @@ final class Config
             // Name shown in the top bar and in the page title (REQUIRED).
             'site_name' => '',
 
-            // Where the name in the top bar links to (https); '' = the form itself.
+            // Where the name in the top bar links to (https, {lang} and {theme} allowed); '' = the form itself.
             'site_url' => '',
 
             // Seconds before "Back to …" goes by itself after sending; 0 = only by hand.
@@ -227,7 +227,8 @@ final class Config
                 throw new ConfigException('matomo.site_id must be the numeric ID of this site in Matomo (e.g. 4).');
             }
         }
-        $siteUrl = (string) $s['site_url'];
+        // {lang} and {theme} are placeholders (Prefs::link): checked with sample values.
+        $siteUrl = str_replace(['{lang}', '{theme}'], ['en', 'dark'], (string) $s['site_url']);
         if ($siteUrl !== '' && (!str_starts_with($siteUrl, 'https://') || filter_var($siteUrl, FILTER_VALIDATE_URL) === false)) {
             throw new ConfigException("site_url must be an https URL (or '').");
         }
@@ -297,7 +298,7 @@ final class Config
         }
         $address = $s['privacy']['address'];
         if (!is_array($address) || !array_is_list($address) || array_filter($address, static fn ($l): bool => !is_string($l)) !== []) {
-            throw new ConfigException("privacy.address must be a list of lines, e.g. ['42046 Reggiolo (RE)'] (or []).");
+            throw new ConfigException("privacy.address must be a list of lines, e.g. ['12345 Example City'] (or []).");
         }
         $project = $s['privacy']['project'];
         if (!is_string($project) || ($project !== '' && preg_match('/^[a-z0-9_]{1,32}$/', $project) !== 1)) {

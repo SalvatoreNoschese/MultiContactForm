@@ -2,7 +2,9 @@
  * Shared page chrome (form and privacy page):
  *  - language drop-down and theme toggle are ?lang= / ?theme= links: the
  *    SERVER writes the cookie (see Prefs.php). Here they are called in the
- *    background and applied live, without reloading;
+ *    background and applied live, without reloading; the toggle also ends
+ *    this visit's theme (theme.js);
+ *  - links to your other sites carry the theme on screen when followed;
  *  - the privacy cookie table follows a theme change live;
  *  - obfuscated email addresses are rebuilt;
  *  - the way back: how many history entries this tab has spent here since
@@ -65,15 +67,27 @@
     }
 
     // ── Theme ──────────────────────────────────────────────────────────────
+    // Shown: this visit's (?view=, kept in sessionStorage by theme.js) >
+    // the saved choice (cookie, written by the server from the toggle) > the
+    // device's (no data-theme: the CSS follows it, live).
 
-    let themeLinks = Array.from(document.querySelectorAll('a.theme-toggle'));
+    const VISIT_KEY = 'mcf.view';
+    const deviceLight = window.matchMedia('(prefers-color-scheme: light)');
+    const valid = (v) => v === 'light' || v === 'dark';
 
-    /** ?view= out of a same-site URL: a theme chosen here replaces it. */
-    function dropView(href) {
-        const u = new URL(href, location.href);
-        if (u.origin !== location.origin || !u.searchParams.has('view')) return href;
-        u.searchParams.delete('view');
-        return u.href;
+    /** The saved choice or this visit's theme, as theme.js resolves it; null = the device's. */
+    function chosenTheme() {
+        let visit = null;
+        try { visit = sessionStorage.getItem(VISIT_KEY); } catch (e) { /* no storage */ }
+        if (valid(visit)) return visit;
+        const name = root.dataset.themeCookie || '__Host-mcf_theme';
+        const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=(light|dark)'));
+        return m ? m[1] : null;
+    }
+
+    /** The theme on screen, the device's included. */
+    function shownTheme() {
+        return valid(root.dataset.theme) ? root.dataset.theme : (deviceLight.matches ? 'light' : 'dark');
     }
 
     /**
@@ -93,30 +107,14 @@
         });
     }
     syncThemeColor();
+    // Following the device: its theme may change while the page is open.
+    deviceLight.addEventListener('change', syncThemeColor);
 
+    /** A theme chosen with the toggle: the CSS shows the other toggle. */
     function applyTheme(theme) {
         root.dataset.theme = theme;
         syncThemeColor();
-
-        // A choice made here: the cookie decides from now on, so ?view= leaves
-        // the address and the links (a reload would otherwise bring it back).
-        try { history.replaceState(history.state, '', dropView(location.href)); } catch (e) { /* ignore */ }
-        document.querySelectorAll('a[href]').forEach((a) => {
-            const next = dropView(a.href);
-            if (next !== a.href) a.href = next;
-        });
-
-        // One toggle only, now pointing to the opposite theme.
-        const opposite = theme === 'dark' ? 'light' : 'dark';
-        themeLinks.forEach((link, i) => {
-            if (i > 0) {
-                link.remove();
-                return;
-            }
-            link.classList.remove('theme-switch--to-dark', 'theme-switch--to-light');
-            link.href = '?theme=' + opposite;
-        });
-        themeLinks = themeLinks.slice(0, 1);
+        drawVisit(); // the toggle has ended this visit's theme
 
         // Privacy page: the theme cookie row follows the change.
         document.querySelectorAll('[data-cookie-status="theme"]').forEach((box) => {
@@ -132,10 +130,55 @@
         });
     }
 
-    themeLinks.forEach((link) => {
+    /**
+     * Privacy page: this visit's theme (sessionStorage), which only the
+     * browser knows about. Its state, and a link that deletes it: the page
+     * then shows the saved choice or the device's theme.
+     */
+    function drawVisit() {
+        document.querySelectorAll('[data-storage-status="visit"]').forEach((box) => {
+            let visit = null;
+            try { visit = sessionStorage.getItem(VISIT_KEY); } catch (e) { /* no storage */ }
+            if (!valid(visit)) {
+                const absent = document.createElement('span');
+                absent.className = 'state-absent';
+                absent.textContent = box.dataset.absent;
+                box.replaceChildren(absent);
+                return;
+            }
+            const present = document.createElement('span');
+            present.className = 'state-present';
+            present.textContent = box.dataset.present;
+            const value = document.createElement('code');
+            value.textContent = visit;
+            const del = document.createElement('a');
+            del.href = '#cookie';
+            del.textContent = box.dataset.delete;
+            del.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                try { sessionStorage.removeItem(VISIT_KEY); } catch (e) { /* no storage */ }
+                const theme = chosenTheme();
+                if (theme) {
+                    root.dataset.theme = theme;
+                } else {
+                    delete root.dataset.theme;
+                }
+                syncThemeColor();
+                drawVisit();
+            });
+            box.replaceChildren(present, ' ', value, ' · ', del);
+        });
+    }
+    drawVisit();
+
+    document.querySelectorAll('a.theme-toggle').forEach((link) => {
         link.addEventListener('click', (ev) => {
             const theme = new URL(link.href, location.href).searchParams.get('theme');
-            if ((theme !== 'light' && theme !== 'dark') || typeof fetch !== 'function') return;
+            if (!valid(theme)) return;
+            // Only the toggle saves a choice, and this visit's theme gives way
+            // to it (also when the link is followed without JavaScript's help).
+            try { sessionStorage.removeItem(VISIT_KEY); } catch (e) { /* no storage */ }
+            if (typeof fetch !== 'function') return;
             ev.preventDefault();
             const href = link.href;
             callPref(href)
@@ -145,17 +188,37 @@
     });
 
     // Back/forward cache: a page drawn before a theme change comes back with
-    // the old theme. The cookie is always current, so re-align from it,
-    // unless the address shows a theme of its own (?view=).
+    // the old theme. Storage and cookie are always current: re-align.
     window.addEventListener('pageshow', (ev) => {
-        if (!ev.persisted || new URL(location.href).searchParams.has('view')) return;
-        const name = root.dataset.themeCookie || '__Host-mcf_theme';
-        const m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=(light|dark)'));
-        if (m && m[1] !== root.dataset.theme) {
-            root.dataset.theme = m[1];
-            location.reload();
+        if (!ev.persisted) return;
+        const theme = chosenTheme();
+        if (theme === (valid(root.dataset.theme) ? root.dataset.theme : null)) return;
+        if (theme) {
+            root.dataset.theme = theme;
+        } else {
+            delete root.dataset.theme;
         }
+        syncThemeColor();
     });
+
+    // Links to your other sites that understand a theme parameter
+    // (data-theme-param, see Prefs::link): the parameter is added only when
+    // the link is followed (middle and Ctrl/Cmd+click too, for a new tab),
+    // with the theme on screen, so the other site opens the same. Right
+    // after, the link is clean again: the address read by the navigation is
+    // already taken.
+    function themeLink(ev) {
+        const a = ev.target.closest && ev.target.closest('a[data-theme-param]');
+        if (!a || !a.dataset.themeParam) return;
+        const clean = a.getAttribute('href');
+        let u;
+        try { u = new URL(a.href); } catch (e) { return; }
+        u.searchParams.set(a.dataset.themeParam, shownTheme());
+        a.href = u.href;
+        setTimeout(() => { a.setAttribute('href', clean); }, 0);
+    }
+    document.addEventListener('click', themeLink, true);
+    document.addEventListener('auxclick', themeLink, true);
 
     // ── Language drop-down (<details>) ─────────────────────────────────────
 

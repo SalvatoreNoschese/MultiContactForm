@@ -21,15 +21,20 @@ defined('MCF_APP') || exit;
  * from this service's own pages (its menu and toggle): a choice made here.
  * From anywhere else (another site, a bookmark, a typed address) nothing is
  * stored: the language is shown from the path (/it/) and the theme from
- * ?view=light|dark, which internal links carry along, so a site can open
- * the form in its own language and theme without leaving a cookie. Why not document.cookie:
+ * ?view=light|dark, so a site can open the form in its own language and
+ * theme without leaving a cookie. ?view= is the theme for this visit, never
+ * saved: the server draws the first page with it, then
+ * public/assets/js/theme.js keeps it in sessionStorage (this tab) and takes
+ * it out of the address, so internal links do not carry it and a shared
+ * address does not carry it either. Why not document.cookie:
  * Safari (ITP) and Brave cap script-written cookies at 7 days whatever the
  * Max-Age, so a "1 year" preference would silently expire after a week.
  * The links work without JavaScript; ui.js calls them in the background and
  * applies the change live.
  *
  * No cookie = no explicit choice: browser language, device theme. The URL
- * wins over the cookie for that page (path language, ?view= theme).
+ * wins over the cookie for that page (path language, ?view= theme), and
+ * this visit's theme wins over the cookie for the visit (theme.js).
  */
 final class Prefs
 {
@@ -55,7 +60,7 @@ final class Prefs
         return $v === 'light' || $v === 'dark' ? $v : null;
     }
 
-    /** The theme shown by ?view= (from a link, never stored), or null. */
+    /** The theme shown by ?view= (from a link, for this visit, never stored server-side), or null. */
     public static function view(): ?string
     {
         $v = $_GET['view'] ?? null;
@@ -68,11 +73,56 @@ final class Prefs
         return self::view() ?? self::theme();
     }
 
-    /** "view=dark" for internal links while ?view= is active, '' otherwise; $sep: "?" or "&". */
-    public static function viewQuery(string $sep): string
+    /**
+     * "view=dark" while ?view= is in this request, '' otherwise; $sep: "?" or
+     * "&". Only for the redirects below, so that ?view= reaches the page
+     * (and theme.js); links never carry it.
+     */
+    private static function viewQuery(string $sep): string
     {
         $v = self::view();
         return $v !== null ? $sep . 'view=' . $v : '';
+    }
+
+    /**
+     * An address in config.php that leads to another of your sites (site_url),
+     * filled in for this page: {lang} is the page's language. A query
+     * parameter whose value is {theme} is left out of the link: ui.js adds it
+     * when the link is followed, with the theme the page shows at that moment
+     * (this visit's, the saved one or the device's), so the other site opens
+     * in the same theme and the address in the page stays clean. A #fragment
+     * in the template is kept.
+     *   https://example.com/{lang}/?view={theme}
+     */
+    public static function link(string $template, string $lang): string
+    {
+        if ($template === '') {
+            return '';
+        }
+        [$link, $fragment] = array_pad(explode('#', $template, 2), 2, '');
+        $link = str_replace('{lang}', rawurlencode($lang), $link);
+        [$base, $query] = array_pad(explode('?', $link, 2), 2, null);
+        if ($query !== null) {
+            $kept = array_filter(explode('&', $query), static fn (string $pair): bool => !str_contains($pair, '{theme}') && $pair !== '');
+            $link = $base . ($kept !== [] ? '?' . implode('&', $kept) : '');
+        }
+        return $link . ($fragment !== '' ? '#' . $fragment : '');
+    }
+
+    /**
+     * Attribute for link()'s <a>: the name of the parameter that carries the
+     * theme, for ui.js. '' when the template has no {theme}.
+     */
+    public static function linkAttrs(string $template): string
+    {
+        $query = (string) parse_url(explode('#', $template, 2)[0], PHP_URL_QUERY);
+        foreach (explode('&', $query) as $pair) {
+            [$name, $value] = array_pad(explode('=', $pair, 2), 2, '');
+            if ($value === '{theme}' && $name !== '') {
+                return ' data-theme-param="' . e($name) . '"';
+            }
+        }
+        return '';
     }
 
     /** Saved choice first, then the browser's Accept-Language. */
@@ -120,17 +170,25 @@ final class Prefs
 
     /**
      * Where the site's name leads, in the top bar and on the error pages: the
-     * site_url of config.php, else the form in that language.
+     * site_url of config.php (a template, see link()), else the form in that
+     * language.
      */
     public static function brandUrl(string $lang): string
     {
-        return (string) Config::get('site_url') ?: self::pageUrl($lang, '');
+        $site = (string) Config::get('site_url');
+        return $site !== '' ? self::link($site, $lang) : self::pageUrl($lang, '');
     }
 
-    /** URL of a page ('' = the form, 'privacy.php') in a language, ?view= kept. */
+    /** brandUrl()'s attribute for ui.js (see linkAttrs()). */
+    public static function brandAttrs(): string
+    {
+        return self::linkAttrs((string) Config::get('site_url'));
+    }
+
+    /** URL of a page ('' = the form, 'privacy.php') in a language. */
     public static function pageUrl(string $lang, string $page): string
     {
-        return url($lang . '/' . $page) . self::viewQuery('?');
+        return url($lang . '/' . $page);
     }
 
     /**
@@ -152,7 +210,7 @@ final class Prefs
         $onSite = self::isOnSite();
 
         // A choice is stored only when made here; from elsewhere the theme
-        // becomes ?view= (shown, carried by internal links, never stored).
+        // becomes ?view= (this visit's theme, never stored: see theme.js).
         // Both may come together (?lang=it&theme=dark): one redirect keeps both.
         $themeChosen = $theme === 'light' || $theme === 'dark';
         if ($themeChosen && $onSite) {
@@ -197,7 +255,7 @@ final class Prefs
             self::go(url(self::resolveLang() . '/' . $page) . ($query !== '' && preg_match('/[\x00-\x20]/', $query) !== 1 ? '?' . $query : ''));
         }
         if (self::path() === '/' . $pathLang) {
-            self::go(self::pageUrl($pathLang, ''), 301); // a language's home is /es/, not /es
+            self::go(self::pageUrl($pathLang, '') . self::viewQuery('?'), 301); // a language's home is /es/, not /es
         }
         return $pathLang;
     }
@@ -271,7 +329,8 @@ final class Prefs
      * <meta name="theme-color">: the browser's own bar (and the Custom Tab an
      * installed app opens for this site) takes the colour of the top bar,
      * --surface in public/assets/css/style.css. With a theme shown, one tag;
-     * without, one per device theme. ui.js follows a live theme change.
+     * without, one per device theme. ui.js follows a live theme change, this
+     * visit's theme and the device's.
      */
     public static function themeColorMeta(): string
     {

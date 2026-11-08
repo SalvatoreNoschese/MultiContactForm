@@ -65,6 +65,7 @@ return [
     'success_title'                 => 'Message sent',
     'success_text'                  => 'Thank you! I will reply as soon as possible to the email address you provided.',
     'back_to'                       => 'Back to {project}',
+    'back'                          => 'Go back',
     'auto_return'                   => 'Going back automatically in {seconds} s.',
     'stay'                          => 'Stay here',
     'send_another'                  => 'Send another message',
@@ -212,6 +213,8 @@ return [
     'privacy.cookie_lang_purpose'   => 'Remembers the language chosen from the menu. Without this cookie the site uses your browser language.',
     'privacy.cookie_theme_duration' => '1 year',
     'privacy.cookie_theme_purpose'  => 'Remembers the light/dark theme chosen with the 🌓 button. Without this cookie the site follows your device theme.',
+    'privacy.storage_visit_duration' => 'Until the tab is closed',
+    'privacy.storage_visit_purpose' => 'In the tab’s memory (sessionStorage), not a cookie, and never sent to the server. Keeps the light/dark theme brought by a link from another site (?view=), so the whole visit has the same look. It is not a saved choice: the 🌓 button replaces it. Technical, like the cookies above: no consent needed.',
     'privacy.cookies_note'          => 'These are all technical cookies: the law only requires the notice you are reading, not consent, which is why there is no cookie banner. The language and theme cookies are only set when you choose them (language menu and 🌓 button) and you can delete them above at any time: without them the site uses your browser language and device theme. No profiling, analytics or third-party cookies.',
     // Only with Matomo configured (config.php); {matomo} is its host.
     'privacy.cookies_stats'         => 'Visit statistics (Matomo, see above) use no cookies: that is why they are not in this table and need no consent.',
