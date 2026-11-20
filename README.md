@@ -519,10 +519,10 @@ CDN, no npm, no Composer, no request to the outside at run time.
 
 | Library | Version | Folder | License |
 |---|---|---|---|
-| ALTCHA (widget) | 3.5.0 | `public/assets/vendor/altcha/` | MIT |
-| altcha-lib-php | 2.3.0 | `app/vendor/altcha-lib-php/` | MIT |
-| Ubuntu Sans | 1.006 | `public/assets/fonts/` | OFL-1.1 |
-| Ubuntu Sans Mono | 1.006 | `public/assets/fonts/` | OFL-1.1 |
+| ALTCHA (widget) | 3.7.0 | `public/assets/vendor/altcha/` | MIT |
+| altcha-lib-php | 2.4.0 | `app/vendor/altcha-lib-php/` | MIT |
+| Ubuntu Sans | 1.006 | `public/assets/fonts/` | Ubuntu-font-1.0 |
+| Ubuntu Sans Mono | 1.006 | `public/assets/fonts/` | Ubuntu-font-1.0 |
 
 There is no lockfile to say which version is which: that role belongs to
 [`app/includes/Vendor.php`](app/includes/Vendor.php), the single source. The

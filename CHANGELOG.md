@@ -5,6 +5,18 @@ All notable changes to MultiContactForm are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-11-20
+
+### Changed
+
+- ALTCHA widget updated from 3.5.0 to 3.7.0.
+- altcha-lib-php updated from 2.3.0 to 2.4.0.
+
+### Fixed
+
+- README: Ubuntu Sans and Ubuntu Sans Mono are licensed under the Ubuntu
+  Font Licence 1.0, not the SIL OFL 1.1.
+
 ## [1.0.1] - 2026-11-08
 
 ### Added

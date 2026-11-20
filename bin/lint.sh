@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2016 # php -r code in single quotes: $ is PHP's, not the shell's
 #
 # bin/lint.sh — pre-release checks for MultiContactForm. Run from anywhere.
 #
@@ -32,7 +33,7 @@ for _arg in "$@"; do
 	esac
 done
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT" || exit 1
 
 if ! command -v php >/dev/null 2>&1; then
@@ -131,7 +132,11 @@ for f in $(php_files); do
 	COUNT=$((COUNT + 1))
 	OUT=$(php -l "$f" 2>&1) || { printf '  %s\n' "$OUT"; BAD=$((BAD + 1)); }
 done
-[ "$BAD" -gt 0 ] && fail "$BAD of $COUNT PHP files failed to parse" || say "      php -l        OK — $COUNT files, PHP $(php -r 'echo PHP_VERSION;')"
+if [ "$BAD" -gt 0 ]; then
+	fail "$BAD of $COUNT PHP files failed to parse"
+else
+	say "      php -l        OK — $COUNT files, PHP $(php -r 'echo PHP_VERSION;')"
+fi
 
 # Every PHP file opens with the PSR-12 header (CONTRIBUTING.md), each block
 # followed by one blank line: <?php, the file docblock if any,
@@ -231,7 +236,7 @@ LQ_BAD=$(php -r '
 			if ($t[0] === T_CONSTANT_ENCAPSED_STRING && $t[1][0] !== "\x27") {
 				echo basename($f), ":", $t[2], ": double-quoted string\n";
 			} elseif ($t[0] === T_CONSTANT_ENCAPSED_STRING && str_contains($t[1], "\\\x27")) {
-				echo basename($f), ":", $t[2], ": escaped apostrophe (write ’)\n";
+				echo basename($f), ":", $t[2], ": escaped apostrophe (write \u{2019})\n";
 			} elseif (in_array($t[0], [T_ENCAPSED_AND_WHITESPACE, T_VARIABLE], true)) {
 				echo basename($f), ":", $t[2], ": a variable in a string\n";
 			}
@@ -377,19 +382,25 @@ say ""
 # catches screenshots, logs, archives or backups left behind before a release.
 say "${B}[6/14] stray files${R}"
 BAD=0
-for f in $(ls -A); do
+for f in * .[!.]* ..?*; do
+	# An unmatched pattern stays as itself: skip it.
+	[ -e "$f" ] || [ -L "$f" ] || continue
 	case "$f" in
 		.git|.github|.gitignore|.gitattributes|.editorconfig|.htaccess|README.md|CHANGELOG.md|SECURITY.md|CONTRIBUTING.md|LICENSE|LICENSE.*|config-sample.php|projects-sample.php|config.php|projects.php) ;;
 		_app-data*|app|bin|docs|public) ;;
 		*) fail "unexpected top-level entry: $f"; BAD=1 ;;
 	esac
 done
-for f in $(find . -path './_app-data*' -prune -o -path ./.git -prune -o -path ./bin/dist -prune -o -path ./bin/tools/stylelint -prune -o -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.gif' -o -iname '*.webp' -o -iname '*.zip' -o -iname '*.log' -o -iname '*.eml' -o -iname '*.bak' -o -iname '*~' \) -print); do
+# A here-document, not a pipe: the loop must run in this shell, or fail()
+# would set FAILED in a subshell and the run would still pass.
+while IFS= read -r f; do
 	case "$f" in
-		./public/assets/img/*|./docs/screenshot.png|./docs/banner.webp) ;;
+		''|./public/assets/img/*|./docs/screenshot.png|./docs/banner.webp) ;;
 		*) fail "unexpected file: $f"; BAD=1 ;;
 	esac
-done
+done <<EOF
+$(find . -path './_app-data*' -prune -o -path ./.git -prune -o -path ./bin/dist -prune -o -path ./bin/tools/stylelint -prune -o -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.gif' -o -iname '*.webp' -o -iname '*.zip' -o -iname '*.log' -o -iname '*.eml' -o -iname '*.bak' -o -iname '*~' \) -print)
+EOF
 [ "$BAD" -eq 0 ] && say "      OK"
 say ""
 
@@ -417,10 +428,13 @@ done
 # Every folder under public/ (a backstop for Options -Indexes) and under app/
 # (no URL, unless the web root is set one level too high): the vendor
 # folders included, their stubs written by bin/fetch-vendor.sh.
-for d in $(find public app -type d); do
-	[ "$d" = public ] && continue # its index.php is the form itself
+# Here-document rather than a pipe, as in 6: fail() must run in this shell.
+while IFS= read -r d; do
+	case "$d" in ''|public) continue ;; esac # public/index.php is the form itself
 	[ "$(cat "$d/index.php" 2>/dev/null)" = '<?php // Silence...' ] || { fail "$d/index.php missing (guard: <?php // Silence...)"; BAD=1; }
-done
+done <<EOF
+$(find public app -type d)
+EOF
 [ "$BAD" -eq 0 ] && say "      OK — $(printf '%s' "$VENDORS" | tr '|' ' ' | paste -sd ',' - | sed 's/,/, /g'); bin/fetch-vendor.sh --check looks for newer ones"
 say ""
 
@@ -1022,8 +1036,8 @@ if [ -z "$PHPSTAN" ]; then
 # Judged by the exit status, not by whether PHPStan printed anything: from
 # 2.3.2 it prints a note about PHPStan Turbo on a clean run too, which a test
 # for "any output" read as problems.
-elif PHPSTAN_OUT=$($PHPSTAN analyse -c bin/tools/phpstan.neon --memory-limit=1G \
-	--no-progress --error-format=raw 2>&1); [ $? -ne 0 ]; then
+elif ! PHPSTAN_OUT=$($PHPSTAN analyse -c bin/tools/phpstan.neon --memory-limit=1G \
+	--no-progress --error-format=raw 2>&1); then
 	printf '%s\n' "$PHPSTAN_OUT" | sed 's/^/  /' | grep .
 	fail "static analysis found problems"
 	explain_failure phpstan "$PHPSTAN_HAVE"

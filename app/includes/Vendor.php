@@ -23,7 +23,7 @@ final class Vendor
         [
             // public/assets/vendor/altcha/
             'name'    => 'ALTCHA (widget)',
-            'version' => '3.5.0',
+            'version' => '3.7.0',
             'url'     => 'https://github.com/altcha-org/altcha',
             'license' => 'MIT',
             'role'    => 'altcha',
@@ -31,7 +31,7 @@ final class Vendor
         [
             // app/vendor/altcha-lib-php/
             'name'    => 'altcha-lib-php',
-            'version' => '2.3.0',
+            'version' => '2.4.0',
             'url'     => 'https://github.com/altcha-org/altcha-lib-php',
             'license' => 'MIT',
             'role'    => 'altcha_php',

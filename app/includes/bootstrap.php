@@ -24,7 +24,7 @@ define('MCF_APP_DIR', dirname(__DIR__));
 // MultiContactForm version, for whoever looks at the files: never shown on a
 // page. CHANGELOG.md's latest heading must match (bin/lint.sh), and the
 // release tag is vx.y.z of it.
-define('MCF_VERSION', '1.0.1');
+define('MCF_VERSION', '1.0.2');
 define('MCF_REPO', 'https://github.com/SalvatoreNoschese/MultiContactForm');
 
 // Before anything is sent: redirects (Prefs) and the 503 below never reach

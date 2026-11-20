@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2016 # php -r code in single quotes: $ is PHP's, not the shell's
 #
 # bin/fetch-vendor.sh — download the third-party libraries at their latest
 # published version, laid out the way this project expects.
@@ -41,8 +42,8 @@
 
 set -u
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+HERE=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 VENDOR_PHP="$ROOT/app/includes/Vendor.php"
 
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
@@ -159,7 +160,9 @@ lib_altcha() {
 	got="sha512-$(php -r 'echo base64_encode(hash_file("sha512", $argv[1], true));' "$tgz")"
 	[ "$got" = "$sri" ] || { bad "integrity check ($url)"; rm -f "$tgz"; return; }
 	ok "npm tarball, SHA-512 verified"
-	mkdir -p "$OUT/.altcha" && tar -xzf "$tgz" -C "$OUT/.altcha" || { bad "extract"; return; }
+	if ! { mkdir -p "$OUT/.altcha" && tar -xzf "$tgz" -C "$OUT/.altcha"; }; then
+		bad "extract"; return
+	fi
 	d="$OUT/public/assets/vendor/altcha"; mkdir -p "$d"
 	# dist/main UMD build, upstream name, never renamed or edited. See
 	# README.md, Third-party code.
